@@ -65,6 +65,20 @@ func parseMVHD(file *os.File, pos int64) (*MVHD, error) {
 	return newMVHD, nil
 }
 
+func (mp4 *MP4) WriteMVHD() error {
+	_, err := mp4.File.Seek(mp4.MVHDPosition, 0)
+	if err != nil {
+		return err
+	}
+
+	err = binary.Write(mp4.File, binary.BigEndian, mp4.MVHD)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func findBytes(key []byte, file *os.File) (int64, error) {
 	if len(key) < 1 {
 		return 0, errors.New("findBytes: key must contain at least 1 value")

@@ -8,12 +8,19 @@ import (
 )
 
 func main() {
-	file, err := os.Open("grubhub.mp4")
+	file, err := os.OpenFile("grubhub.mp4", os.O_RDWR, os.ModeExclusive)
 	if err != nil {
 		panic(err)
 	}
 
 	mp4, err := chronos.ReadMP4(file)
+	if err != nil {
+		panic(err)
+	}
+
+	mp4.MVHD.Duration = 0x7ffffff // maximum
+
+	err = mp4.WriteMVHD()
 	if err != nil {
 		panic(err)
 	}
