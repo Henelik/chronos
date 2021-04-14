@@ -2,12 +2,18 @@ package main
 
 import (
 	"fmt"
+	"os"
 
 	"github.com/Henelik/chronos"
 )
 
 func main() {
-	mp4, err := chronos.ReadMP4("grubhub.mp4")
+	file, err := os.Open("grubhub.mp4")
+	if err != nil {
+		panic(err)
+	}
+
+	mp4, err := chronos.ReadMP4(file)
 	if err != nil {
 		panic(err)
 	}

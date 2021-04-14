@@ -9,9 +9,9 @@ import (
 )
 
 type MP4 struct {
-	Filename string
-	File     *os.File
-	MVHD     *MVHD
+	File         *os.File
+	MVHD         *MVHD
+	MVHDPosition int64
 }
 
 type MVHD struct {
@@ -23,29 +23,25 @@ type MVHD struct {
 	Duration         uint32
 }
 
-func ReadMP4(filename string) (*MP4, error) {
-	file, err := os.Open(filename)
-	if err != nil {
-		return nil, err
-	}
+func ReadMP4(file *os.File) (*MP4, error) {
+	pos, err := getMVHDPosition(file)
 
-	mvhd, err := parseMVHD(file)
+	mvhd, err := parseMVHD(file, pos)
 	if err != nil {
 		return nil, err
 	}
 
 	return &MP4{
-		Filename: filename,
-		File:     file,
-		MVHD:     mvhd,
+		File:         file,
+		MVHD:         mvhd,
+		MVHDPosition: pos,
 	}, nil
 }
 
-func parseMVHD(file *os.File) (*MVHD, error) {
-	// first, find the mvhd in the header
+func getMVHDPosition(file *os.File) (int64, error) {
 	pos, err := findBytes([]byte{0x6d, 0x76, 0x68, 0x64}, file)
 	if err != nil {
-		return nil, err
+		return 0, err
 	}
 
 	fmt.Printf("pos: %v\n", pos)
@@ -53,9 +49,13 @@ func parseMVHD(file *os.File) (*MVHD, error) {
 	// the position is the beginning of the MVHD tag, so we need to set it to the end
 	pos += 4
 
+	return pos, nil
+}
+
+func parseMVHD(file *os.File, pos int64) (*MVHD, error) {
 	newMVHD := new(MVHD)
 
-	_, err = file.Seek(pos, 0)
+	_, err := file.Seek(pos, 0)
 	if err != nil {
 		return nil, err
 	}
@@ -63,14 +63,6 @@ func parseMVHD(file *os.File) (*MVHD, error) {
 	binary.Read(file, binary.BigEndian, newMVHD)
 
 	return newMVHD, nil
-}
-
-func (m *MP4) TimeStep() int {
-	return 0
-}
-
-func (m *MP4) Duration() int {
-	return 0
 }
 
 func findBytes(key []byte, file *os.File) (int64, error) {
