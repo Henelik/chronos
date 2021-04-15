@@ -44,8 +44,6 @@ func getMVHDPosition(file *os.File) (int64, error) {
 		return 0, err
 	}
 
-	fmt.Printf("pos: %v\n", pos)
-
 	// the position is the beginning of the MVHD tag, so we need to set it to the end
 	pos += 4
 
